@@ -1,8 +1,15 @@
 const sqlite3 = require('sqlite3').verbose();
 const fs = require('fs');
-const location = process.env.SQLITE_DB_LOCATION || '/etc/todos/todo.db';
+const path = require('path');
 
 let db, dbAll, dbRun;
+
+const location = process.env.NODE_ENV === 'test'
+    ? ':memory:'
+    : process.env.SQLITE_DB_LOCATION || path.join(__dirname, '../../tmp/todo.db');
+
+
+
 
 function init() {
     const dirName = require('path').dirname(location);
@@ -30,12 +37,17 @@ function init() {
 
 async function teardown() {
     return new Promise((acc, rej) => {
+        if (!db) return acc();
         db.close(err => {
             if (err) rej(err);
-            else acc();
+            else {
+                db = null;
+                acc();
+            }
         });
     });
 }
+
 
 async function getItems() {
     return new Promise((acc, rej) => {

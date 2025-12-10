@@ -1,6 +1,7 @@
 const db = require('../../src/persistence/sqlite');
 const fs = require('fs');
-const location = process.env.SQLITE_DB_LOCATION || '/etc/todos/todo.db';
+process.env.NODE_ENV = 'test';
+const dbModule = require('../../src/persistence/sqlite');
 
 const ITEM = {
     id: '7aef3d7c-d301-4846-8358-2a91ec9d6be3',
@@ -8,15 +9,18 @@ const ITEM = {
     completed: false,
 };
 
-beforeEach(() => {
-    if (fs.existsSync(location)) {
-        fs.unlinkSync(location);
-    }
+beforeEach(async () => {
+    await dbModule.teardown();
+    await dbModule.init();
 });
 
-test('it initializes correctly', async () => {
-    await db.init();
+test('it can store and retrieve items', async () => {
+    await dbModule.storeItem(ITEM);
+    const items = await dbModule.getItems();
+    expect(items.length).toBe(1);
+    expect(items[0]).toEqual(ITEM);
 });
+
 
 test('it can store and retrieve items', async () => {
     await db.init();
